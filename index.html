@@ -268,6 +268,7 @@
       <button class="nav-item" onclick="showSection('content')">🔍 Filtrage de contenu</button>
       <button class="nav-item" onclick="showSection('settings')">⚙️ Paramètres</button>
       <button class="nav-item" onclick="showSection('historique')">🕓 Historique</button>
+      <button class="nav-item" onclick="showSection('downloads')">⬇️ Téléchargements</button>
     </div>
 
 
@@ -393,6 +394,30 @@
         <h3>Mots-clés filtrés</h3>
         <div id="keywordsList"></div>
       </div>
+      <div id="downloads" class="section" style="max-width:850px;margin:auto;">
+        <h2>Historique des téléchargements</h2>
+        <div style="font-size:14px;color:#333;opacity:.7;margin-bottom:4px;">
+          Les 100 derniers fichiers téléchargés :
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="downloads-table" style="width:100%;border-collapse:collapse;background:#f7f9fa;border-radius:10px 10px 0 0;">
+            <thead>
+              <tr style="background:#e9ecef;">
+                <th style="padding:7px 2px;">Date</th>
+                <th style="padding:7px 2px;">Nom</th>
+                <th style="padding:7px 2px;">Taille</th>
+                <th style="padding:7px 2px;">Type</th>
+                <th style="padding:7px 2px;">Source</th>
+                <th style="padding:7px 2px;">État</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="downloads-body">
+              <tr><td colspan="7" style="text-align:center;color:#aaa;">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div id="historique" class="section" style="max-width:700px;margin:auto;">
         <h2>Historique de navigation</h2>
         <div style="font-size:14px;color:#333;opacity:.7;margin-bottom:4px;">
@@ -469,6 +494,7 @@
       document.getElementById(sectionName).classList.add('active');
       event.target.classList.add('active');
       if(sectionName === "historique") loadHistorique();
+      if(sectionName === "downloads") loadDownloads();
     }
 
     // Fonction pour afficher une notification
@@ -760,6 +786,52 @@
     }
     
     function toggleHistoryDetail(id) {
+      const row = document.getElementById(id);
+      if (!row) return;
+      row.style.display = row.style.display === "none" ? "" : "none";
+    }
+    function loadDownloads() {
+      const tbody = document.getElementById('downloads-body');
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#aaa;">Chargement…</td></tr>`;
+      db.ref('sentory/downloads').limitToLast(100).once('value').then(snap => {
+        const val = snap.val();
+        if(!val) return tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#bbb;">Aucun téléchargement trouvé</td></tr>`;
+        // Plus récent en haut
+        const arr = Object.values(val).sort((a,b)=>(b.startTime||"").localeCompare(a.startTime||""));
+        tbody.innerHTML = '';
+        arr.forEach((dl, idx) => {
+          const id = 'dl-detail-'+idx;
+          let fileSize = dl.fileSize ? (dl.fileSize > 1e6 ? (dl.fileSize/1e6).toFixed(2)+' Mo' : (dl.fileSize/1e3).toFixed(1)+' ko') : '';
+          tbody.innerHTML += `
+            <tr style="cursor:pointer" onclick="toggleDownloadDetail('${id}')">
+              <td>${dl.startTime ? dl.startTime.substring(0,10) : ''}</td>
+              <td>${dl.filename ? dl.filename.split(/[\\\\/]/).pop() : ''}</td>
+              <td>${fileSize||''}</td>
+              <td>${dl.mime||''}</td>
+              <td style="max-width:200px;overflow-wrap:anywhere">${dl.url ? `<a href="${dl.url}" target="_blank" rel="noopener">${dl.url}</a>` : ''}</td>
+              <td>${dl.state||''}${dl.danger && dl.danger !== "safe" ? `<span style="color:#dc143c;font-size:1.1em;"> ⚠️</span>`:''}</td>
+              <td style="font-size:1.15em;color:#666;text-align:center;">▶</td>
+            </tr>
+            <tr id="${id}" style="display:none;background:#e0f6ff;">
+              <td colspan="7" style="padding-left:20px;padding-bottom:13px;padding-top:7px;">
+                <div style="font-size:15px;color:#3e3a81;">
+                  <b>Nom complet :</b> ${dl.filename || ''}
+                </div>
+                <div><b>Source :</b> ${dl.url ? `<a href="${dl.url}" target="_blank" rel="noopener">${dl.url}</a>` : ''}</div>
+                <div><b>Taille :</b> ${fileSize||'?'}</div>
+                <div><b>Type MIME :</b> ${dl.mime||''}</div>
+                <div><b>Date :</b> ${dl.startTime||''}</div>
+                <div><b>État :</b> ${dl.state||''} ${dl.paused?'(en pause)':''} ${dl.danger && dl.danger!=="safe"?`<span style="color:#c00;font-weight:600">⚠️ ${dl.danger}</span>`:''}</div>
+                ${dl.byExtension ? `<div><b>Depuis une extension :</b> ${dl.byExtension}</div>` : ''}
+                ${dl.chromeUser ? `<div><b>User/Chrome :</b> ${JSON.stringify(dl.chromeUser)}</div>` : ''}
+              </td>
+            </tr>
+          `;
+        });
+      });
+    }
+    
+    function toggleDownloadDetail(id) {
       const row = document.getElementById(id);
       if (!row) return;
       row.style.display = row.style.display === "none" ? "" : "none";
