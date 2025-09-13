@@ -244,6 +244,28 @@
         padding: 10px;
       }
     }
+    .pin-btn {
+      font-size: 1.25em;
+      padding: 12px 0;
+      background: #eceefc;
+      border: 1.5px solid #b9bbea;
+      border-radius: 10px;
+      color: #322367;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .13s;
+      user-select: none;
+    }
+    .pin-btn:active {
+      background: #d9dbfa;
+    }
+    @media (max-width:500px){
+      #lockscreen>div{padding:12px 3vw 12px 3vw;max-width:99vw;}
+      .pin-btn{padding:9px 0;}
+      #pinPad{width:94vw;max-width:310px;}
+      #pinDisplay{font-size:1.16em;}
+    }
+
   </style>
   
   <!-- Firebase SDK -->
@@ -253,6 +275,30 @@
 </head>
 
 <body>
+  <div id="lockscreen" style="position:fixed;z-index:99999;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(30,20,60,0.97);">
+    <div style="background:#fff;border-radius:21px;box-shadow:0 8px 32px #0004;padding:24px 18px 22px 18px;max-width:92vw;width:320px;display:flex;flex-direction:column;align-items:center;">
+      <div style="font-size:2em;font-weight:500;margin-bottom:10px;color:#554daa">🔐 Admin Sentory</div>
+      <div style="font-size:1.08em;margin-bottom:17px;color:#2f2966;text-align:center;">Veuillez saisir le code PIN admin<br>(6 chiffres)</div>
+      <input id="pinDisplay" type="password" inputmode="none" maxlength="6" disabled style="letter-spacing:10px;text-align:center;font-size:2.1em;width:160px;height:38px;margin-bottom:20px;background:#e9ebfc;border:2px solid #ccd;outline:0;border-radius:7px;">
+      <div id="pinPad" style="width:208px;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;">
+        <button type="button" class="pin-btn">1</button>
+        <button type="button" class="pin-btn">2</button>
+        <button type="button" class="pin-btn">3</button>
+        <button type="button" class="pin-btn">4</button>
+        <button type="button" class="pin-btn">5</button>
+        <button type="button" class="pin-btn">6</button>
+        <button type="button" class="pin-btn">7</button>
+        <button type="button" class="pin-btn">8</button>
+        <button type="button" class="pin-btn">9</button>
+        <button type="button" class="pin-btn" id="pin-del">⌫</button>
+        <button type="button" class="pin-btn">0</button>
+        <button type="button" class="pin-btn" id="pin-ok">OK</button>
+      </div>
+      <div id="pinError" style="height:20px;color:#c00;font-size:14px;margin-top:16px;"></div>
+      <div style="margin-top:3px;font-size:12px;color:#999" id="pinTriesMsg"></div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="header">
       <h1>🛡️ Sentory Administrateur</h1>
@@ -836,6 +882,66 @@
       if (!row) return;
       row.style.display = row.style.display === "none" ? "" : "none";
     }
+
+    // ==== Système de verrouillage PIN admin ====
+    const PIN_CODE = "120776";
+    let pinTry = 0, pinInput = "";
+    const pinDisplay = document.getElementById('pinDisplay');
+    const pinPad = document.getElementById('pinPad');
+    const pinError = document.getElementById('pinError');
+    const pinTriesMsg = document.getElementById('pinTriesMsg');
+    function updatePinDisplay() {
+      pinDisplay.value = pinInput.split('').map(x=>"•").join('');
+    }
+    function lockFail() {
+      pinTry++;
+      if (pinTry >= 3) {
+        pinError.textContent = "Trop d'essais ! Accès bloqué.";
+        pinDisplay.value = "";
+        setTimeout(()=>{location.reload()}, 1100);
+        Array.from(pinPad.querySelectorAll('.pin-btn')).forEach(b=>b.disabled=true);
+        return;
+      }
+      pinInput = "";
+      updatePinDisplay();
+      pinError.textContent = "Code incorrect";
+      pinTriesMsg.textContent = "Essais restants : "+(3-pinTry);
+    }
+    pinTriesMsg.textContent = "Essais restants : 3";
+    updatePinDisplay();
+    
+    pinPad.addEventListener('click', function(e){
+      if(!e.target.classList.contains('pin-btn')) return;
+      if(e.target.id === "pin-del"){
+        pinInput = pinInput.slice(0,-1);
+        pinError.textContent = "";
+        updatePinDisplay();
+        return;
+      }
+      if(e.target.id === "pin-ok" || pinInput.length === 6) {
+        if(pinInput === PIN_CODE) {
+          document.getElementById('lockscreen').style.display="none";
+          pinInput = ""; pinTry = 0; pinError.textContent = "";
+        } else {
+          lockFail();
+        }
+        return;
+      }
+      if(pinInput.length < 6 && e.target.textContent.match(/^\d$/)) {
+        pinInput += e.target.textContent;
+        updatePinDisplay();
+        pinError.textContent = "";
+        if(pinInput.length === 6){
+          if(pinInput === PIN_CODE) {
+            document.getElementById('lockscreen').style.display="none";
+            pinInput = ""; pinTry = 0; pinError.textContent = "";
+          } else {
+            lockFail();
+          }
+        }
+      }
+    });
+
   </script>
 </body>
 </html>
