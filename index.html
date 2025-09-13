@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentory Admin - Contrôle Parental</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .nav {
+      display: flex;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .nav-item {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      background: none;
+      font-size: 16px;
+    }
+    
+    .nav-item:hover { background: #e9ecef; }
+    .nav-item.active { 
+      background: #007bff; 
+      color: white; 
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .section {
+      display: none;
+      margin-bottom: 30px;
+    }
+    
+    .section.active { display: block; }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    input[type="text"], input[type="time"], textarea, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #f8f9fa;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .list-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #007bff;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .notification {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    .notification.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .notification.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    @media (max-width: 768px) {
+      .nav {
+        flex-direction: column;
+      }
+      
+      .content {
+        padding: 15px;
+      }
+      
+      body {
+        padding: 10px;
+      }
+    }
+  </style>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🛡️ Sentory Admin</h1>
+      <p>Interface de contrôle parental avancée</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+      <button class="nav-item active" onclick="showSection('dashboard')">📊 Tableau de bord</button>
+      <button class="nav-item" onclick="showSection('sites')">🚫 Sites bloqués</button>
+      <button class="nav-item" onclick="showSection('categories')">📱 Catégories</button>
+      <button class="nav-item" onclick="showSection('time')">⏰ Restrictions horaires</button>
+      <button class="nav-item" onclick="showSection('content')">🔍 Filtrage de contenu</button>
+      <button class="nav-item" onclick="showSection('settings')">⚙️ Paramètres</button>
+    </div>
+
+    <div class="content">
+      <!-- Notification -->
+      <div id="notification" class="notification"></div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" class="section active">
+        <h2>Tableau de bord</h2>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number" id="blockedSitesCount">0</div>
+            <div>Sites bloqués</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="blockedCategoriesCount">0</div>
+            <div>Catégories bloquées</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="keywordsCount">0</div>
+            <div>Mots-clés filtrés</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Statut du contrôle parental</label>
+          <label class="switch">
+            <input type="checkbox" id="masterSwitch" onchange="toggleMasterControl()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Sites bloqués -->
+      <div id="sites" class="section">
+        <h2>Gestion des sites bloqués</h2>
+        
+        <div class="form-group">
+          <label for="newSite">Ajouter un site à bloquer</label>
+          <input type="text" id="newSite" placeholder="exemple: facebook.com">
+          <button class="btn-primary" onclick="addBlockedSite()">Ajouter</button>
+        </div>
+        
+        <h3>Sites actuellement bloqués</h3>
+        <div id="blockedSitesList"></div>
+      </div>
+
+      <!-- Catégories -->
+      <div id="categories" class="section">
+        <h2>Blocage par catégories</h2>
+        
+        <div class="form-group">
+          <div class="list-item">
+            <span>📱 Réseaux sociaux</span>
+            <label class="switch">
+              <input type="checkbox" id="social" onchange="toggleCategory('social')">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="list-item">
+            <span>🎮 Jeux en ligne</span>
+            <label class="switch">
+              <input type="checkbox" id="gaming" onchange="toggleCategory('gaming')">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="list-item">
+            <span>🔞 Contenu adulte</span>
+            <label class="switch">
+              <input type="checkbox" id="adult" onchange="toggleCategory('adult')">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="list-item">
+            <span>🛒 Sites de shopping</span>
+            <label class="switch">
+              <input type="checkbox" id="shopping" onchange="toggleCategory('shopping')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restrictions horaires -->
+      <div id="time" class="section">
+        <h2>Restrictions horaires</h2>
+        
+        <div class="form-group">
+          <label>Activer les restrictions horaires</label>
+          <label class="switch">
+            <input type="checkbox" id="timeRestrictionsEnabled" onchange="toggleTimeRestrictions()">
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label for="bedtimeStart">Heure de coucher</label>
+          <input type="time" id="bedtimeStart" value="22:00">
+        </div>
+        
+        <div class="form-group">
+          <label for="bedtimeEnd">Heure de réveil</label>
+          <input type="time" id="bedtimeEnd" value="07:00">
+        </div>
+        
+        <button class="btn-success" onclick="saveTimeRestrictions()">Sauvegarder</button>
+      </div>
+
+      <!-- Filtrage de contenu -->
+      <div id="content" class="section">
+        <h2>Filtrage de contenu</h2>
+        
+        <div class="form-group">
+          <label for="newKeyword">Ajouter un mot-clé à filtrer</label>
+          <input type="text" id="newKeyword" placeholder="mot-clé offensant">
+          <button class="btn-primary" onclick="addKeyword()">Ajouter</button>
+        </div>
+        
+        <h3>Mots-clés filtrés</h3>
+        <div id="keywordsList"></div>
+      </div>
+
+      <!-- Paramètres -->
+      <div id="settings" class="section">
+        <h2>Paramètres avancés</h2>
+        
+        <div class="form-group">
+          <button class="btn-danger" onclick="resetAllSettings()">Réinitialiser tous les paramètres</button>
+        </div>
+        
+        <div class="form-group">
+          <button class="btn-primary" onclick="exportSettings()">Exporter la configuration</button>
+          <button class="btn-primary" onclick="importSettings()">Importer la configuration</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAVagnXbpObMl8Bp3nyk2MlQ7b1gsLiX-w",
+      authDomain: "sentory.firebaseapp.com",
+      databaseURL: "https://sentory-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "sentory",
+      storageBucket: "sentory.firebasestorage.app",
+      messagingSenderId: "949632527269",
+      appId: "1:949632527269:web:63f033f1d5d08da469564c",
+      measurementId: "G-PE7TXGMZ47"
+    };
+
+    // Initialiser Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const ref = db.ref('sentory/parentalControl');
+
+    // Variables globales
+    let currentData = {};
+
+    // Fonction pour afficher une section
+    function showSection(sectionName) {
+      // Masquer toutes les sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Désactiver tous les nav-items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Afficher la section sélectionnée
+      document.getElementById(sectionName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Fonction pour afficher une notification
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.style.display = 'block';
+      
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 3000);
+    }
+
+    // Charger les données depuis Firebase
+    function loadData() {
+      ref.on('value', (snapshot) => {
+        currentData = snapshot.val() || {};
+        updateUI();
+      });
+    }
+
+    // Mettre à jour l'interface utilisateur
+    function updateUI() {
+      // Tableau de bord
+      document.getElementById('blockedSitesCount').textContent = 
+        (currentData.blockedSites || []).length;
+      
+      let categoriesCount = 0;
+      if (currentData.blockedCategories) {
+        categoriesCount = Object.values(currentData.blockedCategories).filter(v => v).length;
+      }
+      document.getElementById('blockedCategoriesCount').textContent = categoriesCount;
+      
+      document.getElementById('keywordsCount').textContent = 
+        (currentData.offensiveKeywords || []).length;
+
+      // Master switch
+      document.getElementById('masterSwitch').checked = currentData.enabled || false;
+
+      // Sites bloqués
+      updateBlockedSitesList();
+
+      // Catégories
+      updateCategoriesUI();
+
+      // Restrictions horaires
+      updateTimeRestrictionsUI();
+
+      // Mots-clés
+      updateKeywordsList();
+    }
+
+    // Mettre à jour la liste des sites bloqués
+    function updateBlockedSitesList() {
+      const container = document.getElementById('blockedSitesList');
+      container.innerHTML = '';
+      
+      const sites = currentData.blockedSites || [];
+      sites.forEach((site, index) => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <span>${site}</span>
+          <button class="btn-danger" onclick="removeBlockedSite(${index})">Supprimer</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // Ajouter un site bloqué
+    function addBlockedSite() {
+      const input = document.getElementById('newSite');
+      const site = input.value.trim();
+      
+      if (!site) {
+        showNotification('Veuillez entrer un nom de site', 'error');
+        return;
+      }
+      
+      const sites = currentData.blockedSites || [];
+      if (sites.includes(site)) {
+        showNotification('Ce site est déjà dans la liste', 'error');
+        return;
+      }
+      
+      sites.push(site);
+      updateFirebase({ blockedSites: sites });
+      input.value = '';
+      showNotification(`Site ${site} ajouté à la liste de blocage`);
+    }
+
+    // Supprimer un site bloqué
+    function removeBlockedSite(index) {
+      const sites = [...(currentData.blockedSites || [])];
+      const removedSite = sites.splice(index, 1)[0];
+      updateFirebase({ blockedSites: sites });
+      showNotification(`Site ${removedSite} supprimé de la liste`);
+    }
+
+    // Mettre à jour l'interface des catégories
+    function updateCategoriesUI() {
+      const categories = currentData.blockedCategories || {};
+      document.getElementById('social').checked = categories.social || false;
+      document.getElementById('gaming').checked = categories.gaming || false;
+      document.getElementById('adult').checked = categories.adult || false;
+      document.getElementById('shopping').checked = categories.shopping || false;
+    }
+
+    // Basculer une catégorie
+    function toggleCategory(category) {
+      const categories = currentData.blockedCategories || {};
+      categories[category] = document.getElementById(category).checked;
+      updateFirebase({ blockedCategories: categories });
+      showNotification(`Catégorie ${category} ${categories[category] ? 'activée' : 'désactivée'}`);
+    }
+
+    // Mettre à jour l'interface des restrictions horaires
+    function updateTimeRestrictionsUI() {
+      const restrictions = currentData.timeRestrictions || {};
+      document.getElementById('timeRestrictionsEnabled').checked = restrictions.enabled || false;
+      document.getElementById('bedtimeStart').value = restrictions.bedtimeStart || '22:00';
+      document.getElementById('bedtimeEnd').value = restrictions.bedtimeEnd || '07:00';
+    }
+
+    // Basculer les restrictions horaires
+    function toggleTimeRestrictions() {
+      const enabled = document.getElementById('timeRestrictionsEnabled').checked;
+      const restrictions = currentData.timeRestrictions || {};
+      restrictions.enabled = enabled;
+      updateFirebase({ timeRestrictions: restrictions });
+      showNotification(`Restrictions horaires ${enabled ? 'activées' : 'désactivées'}`);
+    }
+
+    // Sauvegarder les restrictions horaires
+    function saveTimeRestrictions() {
+      const restrictions = {
+        enabled: document.getElementById('timeRestrictionsEnabled').checked,
+        bedtimeStart: document.getElementById('bedtimeStart').value,
+        bedtimeEnd: document.getElementById('bedtimeEnd').value
+      };
+      updateFirebase({ timeRestrictions: restrictions });
+      showNotification('Restrictions horaires sauvegardées');
+    }
+
+    // Mettre à jour la liste des mots-clés
+    function updateKeywordsList() {
+      const container = document.getElementById('keywordsList');
+      container.innerHTML = '';
+      
+      const keywords = currentData.offensiveKeywords || [];
+      keywords.forEach((keyword, index) => {
+        const item = document.createElement('div');
+        item.className = 'list-item';   
+        item.innerHTML = `
+          <span>${keyword}</span>
+          <button class="btn-danger" onclick="removeKeyword(${index})">Supprimer</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // Ajouter un mot-clé
+    function addKeyword() {
+      const input = document.getElementById('newKeyword');
+      const keyword = input.value.trim();
+      
+      if (!keyword) {
+        showNotification('Veuillez entrer un mot-clé', 'error');
+        return;
+      }
+      
+      const keywords = currentData.offensiveKeywords || [];
+      if (keywords.includes(keyword)) {
+        showNotification('Ce mot-clé est déjà dans la liste', 'error');
+        return;
+      }
+      
+      keywords.push(keyword);
+      updateFirebase({ offensiveKeywords: keywords });
+      input.value = '';
+      showNotification(`Mot-clé "${keyword}" ajouté`);
+    }
+
+    // Supprimer un mot-clé
+    function removeKeyword(index) {
+      const keywords = [...(currentData.offensiveKeywords || [])];
+      const removedKeyword = keywords.splice(index, 1)[0];
+      updateFirebase({ offensiveKeywords: keywords });
+      showNotification(`Mot-clé "${removedKeyword}" supprimé`);
+    }
+
+    // Basculer le contrôle principal
+    function toggleMasterControl() {
+      const enabled = document.getElementById('masterSwitch').checked;
+      updateFirebase({ enabled: enabled });
+      showNotification(`Contrôle parental ${enabled ? 'activé' : 'désactivé'}`);
+    }
+
+    // Réinitialiser tous les paramètres
+    function resetAllSettings() {
+      if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres ?')) {
+        ref.remove();
+        showNotification('Tous les paramètres ont été réinitialisés');
+      }
+    }
+
+    // Exporter la configuration
+    function exportSettings() {
+      const dataStr = JSON.stringify(currentData, null, 2);
+      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'sentory-config.json';
+      link.click();
+      showNotification('Configuration exportée');
+    }
+
+    // Importer la configuration
+    function importSettings() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const config = JSON.parse(e.target.result);
+              ref.set(config);
+              showNotification('Configuration importée avec succès');
+            } catch (error) {
+              showNotification('Erreur lors de l\'importation', 'error');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    }
+
+    // Mettre à jour Firebase
+    function updateFirebase(updates) {
+      ref.update(updates).catch((error) => {
+        showNotification('Erreur lors de la sauvegarde: ' + error.message, 'error');
+        console.error('Erreur Firebase:', error);
+      });
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+    });
+  </script>
+</body>
+</html>
