@@ -267,7 +267,9 @@
       <button class="nav-item" onclick="showSection('time')">⏰ Restrictions horaires</button>
       <button class="nav-item" onclick="showSection('content')">🔍 Filtrage de contenu</button>
       <button class="nav-item" onclick="showSection('settings')">⚙️ Paramètres</button>
+      <button class="nav-item" onclick="showSection('historique')">🕓 Historique</button>
     </div>
+
 
     <div class="content">
       <!-- Notification -->
@@ -391,6 +393,28 @@
         <h3>Mots-clés filtrés</h3>
         <div id="keywordsList"></div>
       </div>
+      <div id="historique" class="section" style="max-width:700px;margin:auto;">
+        <h2>Historique de navigation</h2>
+        <div style="font-size:14px;color:#333;opacity:.7;margin-bottom:4px;">
+          Les 100 derniers sites chargés&nbsp;:
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="history-table" style="width:100%;border-collapse:collapse;background:#f7f9fa;border-radius:10px 10px 0 0;">
+            <thead>
+              <tr style="background:#e9ecef;">
+                <th style="padding:7px 2px;">Date</th>
+                <th style="padding:7px 2px;">Heure</th>
+                <th style="padding:7px 2px;">Site</th>
+                <th style="padding:7px 2px;">Bloqué ?</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr><td colspan="5" style="text-align:center;color:#aaa;">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- Paramètres -->
       <div id="settings" class="section">
@@ -444,6 +468,7 @@
       // Afficher la section sélectionnée
       document.getElementById(sectionName).classList.add('active');
       event.target.classList.add('active');
+      if(sectionName === "historique") loadHistorique();
     }
 
     // Fonction pour afficher une notification
@@ -699,6 +724,46 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadData();
     });
+    function loadHistorique() {
+      const tbody = document.getElementById('history-body');
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#aaa;">Chargement…</td></tr>`;
+      db.ref('sentory/history').limitToLast(100).once('value').then(snap => {
+        const val = snap.val();
+        if(!val) return tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#bbb;">Aucune donnée</td></tr>`;
+        // Tri du plus récent au plus ancien
+        const arr = Object.values(val).sort((a,b)=>(b.timestamp||"").localeCompare(a.timestamp||""));
+        tbody.innerHTML = '';
+        arr.forEach((entry, idx) => {
+          const id = 'history-detail-'+idx;
+          tbody.innerHTML += `
+            <tr style="cursor:pointer" onclick="toggleHistoryDetail('${id}')">
+              <td>${entry.date||''}</td>
+              <td>${entry.hour||''}</td>
+              <td style="max-width:180px;overflow-wrap:anywhere">${entry.domain||''}</td>
+              <td>${entry.isBlocked ? '<span style="color:#dc143c;font-weight:600;">Oui</span>' : '<span style="color:#28a745;">Non</span>'}</td>
+              <td style="font-size:1.15em;color:#666;text-align:center;">&#9654;</td>
+            </tr>
+            <tr id="${id}" style="display:none;background:#f1eaff;">
+              <td colspan="5" style="padding-left:20px;padding-bottom:20px;padding-top:7px;">
+                <div style="font-size:15px;color:#5f2c88;">
+                  <b>URL:</b> ${entry.url || ''}
+                </div>
+                <div><b>Catégorie:</b> ${entry.category || ''}</div>
+                ${entry.tabInfo && entry.tabInfo.title ? `<div><b>Titre :</b> ${entry.tabInfo.title}</div>` : ''}
+                ${entry.tabInfo && entry.tabInfo.favicon ? `<div><b>Favicon:</b> <img src="${entry.tabInfo.favicon}" style="vertical-align:middle;width:18px;height:18px;border-radius:3px"></div>` : ''}
+                <div><b>User agent:</b> <span style="font-size:12px;color:#777">${entry.userAgent||''}</span></div>
+              </td>
+            </tr>
+          `;
+        });
+      });
+    }
+    
+    function toggleHistoryDetail(id) {
+      const row = document.getElementById(id);
+      if (!row) return;
+      row.style.display = row.style.display === "none" ? "" : "none";
+    }
   </script>
 </body>
 </html>
